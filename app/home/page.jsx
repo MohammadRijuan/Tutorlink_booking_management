@@ -218,7 +218,7 @@ function HomePageContent() {
                         <div className="text-slate-400">{record.tutorMobile}</div>
                       </td>
                       <td className="px-3 py-3">
-                        <div className="font-medium text-slate-200">{record.guardianName}</div>
+                        <div className="font-medium text-slate-200">{record.guardianName || record.guardianFacebook || "N/A"}</div>
                         <div className="text-slate-400">{record.guardianMobile}</div>
                       </td>
                       <td className="px-3 py-3 text-slate-200">TK {Number(record.salary).toLocaleString()}</td>
