@@ -255,9 +255,9 @@ function HomePageContent() {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4 backdrop-blur">
-          <div className="w-full max-w-2xl rounded-3xl border border-white/10 bg-slate-900 p-6 shadow-soft">
-            <div className="mb-5 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-slate-950/80 px-3 py-4 backdrop-blur sm:items-center sm:px-4">
+          <div className="w-full max-w-2xl max-h-[100dvh] overflow-hidden rounded-3xl border border-white/10 bg-slate-900 p-4 shadow-soft sm:p-6">
+            <div className="mb-5 flex items-center justify-between gap-3">
               <div>
                 <h3 className="text-xl font-semibold">{editingRecord ? 'Edit Tuition' : 'Add New Tuition'}</h3>
                 <p className="text-sm text-slate-400">Fill in the tuition details below.</p>
@@ -265,7 +265,8 @@ function HomePageContent() {
               <button onClick={() => { setShowModal(false); resetForm(); }} className="rounded-xl border border-white/10 px-3 py-2 text-sm text-slate-300">Close</button>
             </div>
 
-            <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
+            <div className="max-h-[calc(90dvh-7rem)] overflow-y-auto pr-1 sm:max-h-none sm:overflow-visible sm:pr-0">
+              <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
               {[
                 ['tuitionCode', 'Tuition Code'],
                 ['tutorName', 'Tutor Name'],
@@ -312,6 +313,7 @@ function HomePageContent() {
                 <button type="submit" className="rounded-2xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-500">Save</button>
               </div>
             </form>
+            </div>
           </div>
         </div>
       )}
