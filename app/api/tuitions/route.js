@@ -5,7 +5,21 @@ import Tuition from '../../../models/Tuition';
 export async function GET() {
   try {
     await connectDb();
-    const tuitions = await Tuition.find({}).sort({ createdAt: -1 });
+    const tuitions = await Tuition.find({}).lean();
+
+    tuitions.sort((a, b) => {
+      const aCode = Number.parseInt(a.tuitionCode, 10);
+      const bCode = Number.parseInt(b.tuitionCode, 10);
+      const aNumber = Number.isNaN(aCode) ? Number.MAX_SAFE_INTEGER : aCode;
+      const bNumber = Number.isNaN(bCode) ? Number.MAX_SAFE_INTEGER : bCode;
+
+      if (aNumber !== bNumber) {
+        return aNumber - bNumber;
+      }
+
+      return String(a.tuitionCode).localeCompare(String(b.tuitionCode));
+    });
+
     return NextResponse.json({ tuitions });
   } catch (error) {
     return NextResponse.json({ message: 'Something Went Wrong' }, { status: 500 });

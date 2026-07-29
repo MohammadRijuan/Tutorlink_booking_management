@@ -55,14 +55,28 @@ function HomePageContent() {
 
   const filteredRecords = useMemo(() => {
     const query = search.toLowerCase();
-    return records.filter((record) => {
-      return [
-        record.tuitionCode,
-        record.tutorName,
-        record.guardianName,
-        record.guardianMobile,
-      ].some((value) => (value || '').toLowerCase().includes(query));
-    });
+
+    return records
+      .filter((record) => {
+        return [
+          record.tuitionCode,
+          record.tutorName,
+          record.guardianName,
+          record.guardianMobile,
+        ].some((value) => (value || '').toLowerCase().includes(query));
+      })
+      .sort((a, b) => {
+        const aCode = Number.parseInt(a.tuitionCode, 10);
+        const bCode = Number.parseInt(b.tuitionCode, 10);
+        const aNumber = Number.isNaN(aCode) ? Number.MAX_SAFE_INTEGER : aCode;
+        const bNumber = Number.isNaN(bCode) ? Number.MAX_SAFE_INTEGER : bCode;
+
+        if (aNumber !== bNumber) {
+          return aNumber - bNumber;
+        }
+
+        return String(a.tuitionCode).localeCompare(String(b.tuitionCode));
+      });
   }, [records, search]);
 
   const resetForm = () => {
