@@ -6,6 +6,30 @@ export async function GET() {
   try {
     await connectDb();
     const tuitions = await Tuition.find({}).lean();
+    const updates = [];
+
+    tuitions.forEach((tuition) => {
+      const shouldUpdateBooking = tuition.bookingStatus === 'Booked' && !tuition.bookingDate;
+      const shouldUpdateExpiry = tuition.bookingStatus === 'Booked' && !tuition.feeExpiryDate;
+
+      if (shouldUpdateBooking || shouldUpdateExpiry) {
+        const bookingDate = tuition.bookingDate ? new Date(tuition.bookingDate) : new Date(tuition.createdAt || new Date());
+        const feeExpiryDate = new Date(bookingDate);
+        feeExpiryDate.setMonth(feeExpiryDate.getMonth() + 1);
+
+        const update = {};
+        if (shouldUpdateBooking) update.bookingDate = bookingDate;
+        if (shouldUpdateExpiry) update.feeExpiryDate = feeExpiryDate;
+        updates.push({ updateOne: { filter: { _id: tuition._id }, update: { $set: update } } });
+
+        tuition.bookingDate = bookingDate;
+        tuition.feeExpiryDate = feeExpiryDate;
+      }
+    });
+
+    if (updates.length > 0) {
+      await Tuition.bulkWrite(updates);
+    }
 
     tuitions.sort((a, b) => {
       const aCode = Number.parseInt(a.tuitionCode, 10);
@@ -30,10 +54,16 @@ export async function POST(request) {
   try {
     await connectDb();
     const body = await request.json();
+    const createdAt = new Date();
+    const bookingDate = body.bookingStatus === 'Booked' ? createdAt : null;
+    const feeExpiryDate = bookingDate ? new Date(new Date(bookingDate).setMonth(new Date(bookingDate).getMonth() + 1)) : null;
+
     const tuition = await Tuition.create({
       ...body,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      bookingDate,
+      feeExpiryDate,
+      createdAt,
+      updatedAt: createdAt,
     });
     return NextResponse.json({ tuition }, { status: 201 });
   } catch (error) {
@@ -51,15 +81,21 @@ export async function PATCH(request) {
       return NextResponse.json({ message: 'Invalid tuition id' }, { status: 400 });
     }
 
-    const tuition = await Tuition.findByIdAndUpdate(
-      id,
-      { ...body, id: undefined, updatedAt: new Date() },
-      { new: true }
-    );
-
-    if (!tuition) {
+    const existingTuition = await Tuition.findById(id);
+    if (!existingTuition) {
       return NextResponse.json({ message: 'Tuition not found' }, { status: 404 });
     }
+
+    const bookingDate = body.bookingStatus === 'Booked'
+      ? existingTuition.bookingDate || new Date(existingTuition.createdAt || new Date())
+      : existingTuition.bookingDate || null;
+    const feeExpiryDate = bookingDate ? new Date(new Date(bookingDate).setMonth(new Date(bookingDate).getMonth() + 1)) : null;
+
+    const tuition = await Tuition.findByIdAndUpdate(
+      id,
+      { ...body, id: undefined, bookingDate, feeExpiryDate, updatedAt: new Date() },
+      { new: true }
+    );
 
     return NextResponse.json({ tuition });
   } catch (error) {

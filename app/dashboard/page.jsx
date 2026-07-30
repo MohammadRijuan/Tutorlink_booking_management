@@ -11,6 +11,7 @@ const statCards = [
   { label: 'Total Booked', key: 'booked' },
   { label: 'Total Pending', key: 'pending' },
   { label: 'Total Cancelled', key: 'cancelled' },
+  { label: 'Pending Agency Fees', key: 'pendingFees' },
 ];
 
 function DashboardPageContent() {
@@ -38,9 +39,10 @@ function DashboardPageContent() {
     const cancelled = records.filter((r) => r.bookingStatus === 'Cancelled').length;
     const revenue = records.filter((r) => r.feeStatus === 'Done').reduce((acc, r) => acc + Number(r.agencyFee || 0), 0);
     const cancelledFee = records.filter((r) => r.bookingStatus === 'Cancelled').reduce((acc, r) => acc + Number(r.agencyFee || 0), 0);
+    const pendingFees = records.filter((r) => r.feeStatus === 'Pending').reduce((acc, r) => acc + Number(r.agencyFee || 0), 0);
     const salaryTotal = records.reduce((acc, r) => acc + Number(r.salary || 0), 0);
 
-    return { total: records.length, booked, pending, cancelled, revenue, cancelledFee, salaryTotal };
+    return { total: records.length, booked, pending, cancelled, revenue, cancelledFee, pendingFees, salaryTotal };
   }, [records]);
 
   const chartData = useMemo(() => {
@@ -91,7 +93,7 @@ function DashboardPageContent() {
           </div>
         </header>
 
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
           {statCards.map((card) => (
             <div key={card.key} className="rounded-3xl border border-white/10 bg-slate-900/70 p-5 shadow-soft backdrop-blur">
               <p className="text-sm text-slate-400">{card.label}</p>
@@ -122,7 +124,7 @@ function DashboardPageContent() {
         </section>
 
         <section className="rounded-3xl border border-white/10 bg-slate-900/70 p-5 shadow-soft backdrop-blur">
-          <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between text-slate-200">
+          <div className="mb-5 flex flex-col gap-5 lg:gap-3 lg:flex-row lg:items-center lg:justify-between text-slate-200">
             <div className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-brand-400" /> Revenue vs Salary Trend
             </div>
@@ -162,13 +164,13 @@ function DashboardPageContent() {
           {loading ? (
             <div className="h-72 rounded-2xl border border-dashed border-white/10 bg-slate-800/40" />
           ) : (
-            <div className="overflow-x-auto rounded-2xl border border-white/10 bg-slate-950/50 p-3 sm:p-4">
+            <div className="overflow-x-auto rounded-2xl border border-white/10 bg-slate-950/50 px-3 py-4 sm:px-4 sm:py-6">
               <div className={`h-72 ${selectedRange !== '1' ? 'min-w-[320px] sm:min-w-0' : ''}`}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
+                  <BarChart data={chartData} margin={{ top: 8, right: 8, left: -24, bottom: 0 }}>
                     <CartesianGrid stroke="#334155" strokeDasharray="3 3" vertical={false} />
                     <XAxis dataKey="month" stroke="#94a3b8" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} minTickGap={2} interval="preserveStartEnd" />
-                    <YAxis stroke="#94a3b8" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} width={44} />
+                    <YAxis stroke="#94a3b8" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} width={76} />
                     <Tooltip
                       cursor={{ fill: 'rgba(34, 197, 94, 0.06)' }}
                       contentStyle={{ backgroundColor: '#020617', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', color: '#e2e8f0' }}

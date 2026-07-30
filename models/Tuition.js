@@ -12,6 +12,8 @@ const tuitionSchema = new mongoose.Schema(
     agencyFee: { type: Number, required: true, min: 0 },
     feeStatus: { type: String, enum: ['Pending', 'Done'], default: 'Pending' },
     bookingStatus: { type: String, enum: ['Pending', 'Booked', 'Cancelled'], default: 'Pending' },
+    bookingDate: { type: Date },
+    feeExpiryDate: { type: Date },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
   },
