@@ -1,11 +1,25 @@
 import { NextResponse } from 'next/server';
 import connectDb from '../../../lib/mongodb';
-import CashFlow from '../../../models/CashFlow';
+import { CashEntry, CostEntry } from '../../../models/CashFlow';
+
+const getModelByType = (type) => {
+  if (type === 'cash') return CashEntry;
+  if (type === 'cost') return CostEntry;
+  return null;
+};
 
 export async function GET() {
   try {
     await connectDb();
-    const entries = await CashFlow.find({}).sort({ createdAt: -1 }).lean();
+
+    const cashEntries = await CashEntry.find({}).sort({ createdAt: -1 }).lean();
+    const costEntries = await CostEntry.find({}).sort({ createdAt: -1 }).lean();
+
+    const entries = [
+      ...cashEntries.map((entry) => ({ ...entry, type: 'cash' })),
+      ...costEntries.map((entry) => ({ ...entry, type: 'cost' })),
+    ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
     return NextResponse.json({ entries });
   } catch (error) {
     return NextResponse.json({ message: 'Something Went Wrong' }, { status: 500 });
@@ -21,8 +35,13 @@ export async function POST(request) {
       return NextResponse.json({ message: 'Invalid cash flow data' }, { status: 400 });
     }
 
-    const entry = await CashFlow.create({
-      type: body.type,
+    const Model = getModelByType(body.type);
+
+    if (!Model) {
+      return NextResponse.json({ message: 'Invalid entry type' }, { status: 400 });
+    }
+
+    const entry = await Model.create({
       title: body.title,
       amount: Number(body.amount),
       createdAt: new Date(),
@@ -44,9 +63,15 @@ export async function PATCH(request) {
       return NextResponse.json({ message: 'Invalid cash flow data' }, { status: 400 });
     }
 
-    const entry = await CashFlow.findByIdAndUpdate(
+    const Model = getModelByType(type);
+
+    if (!Model) {
+      return NextResponse.json({ message: 'Invalid entry type' }, { status: 400 });
+    }
+
+    const entry = await Model.findByIdAndUpdate(
       id,
-      { title, amount: Number(amount), type },
+      { title, amount: Number(amount) },
       { new: true }
     );
 
@@ -65,12 +90,19 @@ export async function DELETE(request) {
     await connectDb();
     const url = new URL(request.url);
     const id = url.searchParams.get('id');
+    const type = url.searchParams.get('type');
 
-    if (!id) {
-      return NextResponse.json({ message: 'Invalid cash flow id' }, { status: 400 });
+    if (!id || !type) {
+      return NextResponse.json({ message: 'Invalid cash flow id or type' }, { status: 400 });
     }
 
-    const entry = await CashFlow.findByIdAndDelete(id);
+    const Model = getModelByType(type);
+
+    if (!Model) {
+      return NextResponse.json({ message: 'Invalid entry type' }, { status: 400 });
+    }
+
+    const entry = await Model.findByIdAndDelete(id);
 
     if (!entry) {
       return NextResponse.json({ message: 'Entry not found' }, { status: 404 });

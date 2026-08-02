@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, LayoutDashboard, Pencil, Plus } from "lucide-react";
+import { ArrowLeft, LayoutDashboard, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
@@ -12,6 +12,7 @@ function CashManagementPageContent() {
   const [costEntries, setCostEntries] = useState([]);
   const [entryModalType, setEntryModalType] = useState(null);
   const [editingEntry, setEditingEntry] = useState(null);
+  const [deleteEntry, setDeleteEntry] = useState(null);
   const [entryForm, setEntryForm] = useState({ title: "", amount: "" });
 
   const fetchRecords = async () => {
@@ -121,6 +122,26 @@ function CashManagementPageContent() {
     }
   };
 
+  const handleDeleteEntry = async () => {
+    if (!deleteEntry?._id) return;
+
+    try {
+      const res = await fetch(
+        `/api/cash-flow?id=${deleteEntry._id}&type=${deleteEntry.type}`,
+        { method: "DELETE" },
+      );
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Delete failed");
+
+      setDeleteEntry(null);
+      await fetchCashFlow();
+      toast.success("Entry deleted successfully");
+    } catch (error) {
+      toast.error(error.message || "Something Went Wrong");
+    }
+  };
+
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(34,197,94,0.12),_transparent_30%),linear-gradient(135deg,#020617_0%,#0f172a_100%)] px-4 py-6 text-slate-100 sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-7xl flex-col gap-6">
@@ -173,9 +194,9 @@ function CashManagementPageContent() {
                 <table className="min-w-full divide-y divide-white/10 text-sm">
                   <thead className="sticky top-0 z-10 bg-slate-900/95 text-slate-400 backdrop-blur">
                     <tr>
-                      <th className="px-3 py-3 text-left font-medium">Initial Adding Date</th>
+                      <th className="px-3 py-3 text-left font-medium">Date</th>
                       <th className="px-3 py-3 text-left font-medium">Title</th>
-                      <th className="px-3 py-3 text-right font-medium">Amount</th>
+                      <th className="px-3 py-3 text-center font-medium">Amount</th>
                       <th className="px-3 py-3 text-right font-medium">Action</th>
                     </tr>
                   </thead>
@@ -189,7 +210,7 @@ function CashManagementPageContent() {
                         <tr key={entry._id || entry.id} className="hover:bg-slate-800/30">
                           <td className="px-3 py-3 text-slate-300">{new Date(entry.createdAt).toLocaleDateString()}</td>
                           <td className="px-3 py-3 text-slate-200">{entry.title}</td>
-                          <td className="px-3 py-3 text-right font-medium text-emerald-300">TK {Number(entry.amount).toLocaleString()}</td>
+                          <td className="px-3 py-3 text-center font-medium text-emerald-300">TK {Number(entry.amount).toLocaleString()}</td>
                           <td className="px-3 py-3">
                             <div className="flex justify-end gap-2">
                               <button
@@ -198,6 +219,13 @@ function CashManagementPageContent() {
                                 title="Edit cash"
                               >
                                 <Pencil className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={() => setDeleteEntry({ ...entry, type: "cash" })}
+                                className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-2 text-rose-300 transition hover:bg-rose-500/20"
+                                title="Delete cash"
+                              >
+                                <Trash2 className="h-4 w-4" />
                               </button>
                             </div>
                           </td>
@@ -220,9 +248,9 @@ function CashManagementPageContent() {
                 <table className="min-w-full divide-y divide-white/10 text-sm">
                   <thead className="sticky top-0 z-10 bg-slate-900/95 text-slate-400 backdrop-blur">
                     <tr>
-                      <th className="px-3 py-3 text-left font-medium">Initial Adding Date</th>
+                      <th className="px-3 py-3 text-left font-medium">Date</th>
                       <th className="px-3 py-3 text-left font-medium">Title</th>
-                      <th className="px-3 py-3 text-right font-medium">Amount</th>
+                      <th className="px-3 py-3 text-center font-medium">Amount</th>
                       <th className="px-3 py-3 text-right font-medium">Action</th>
                     </tr>
                   </thead>
@@ -236,7 +264,7 @@ function CashManagementPageContent() {
                         <tr key={entry._id || entry.id} className="hover:bg-slate-800/30">
                           <td className="px-3 py-3 text-slate-300">{new Date(entry.createdAt).toLocaleDateString()}</td>
                           <td className="px-3 py-3 text-slate-200">{entry.title}</td>
-                          <td className="px-3 py-3 text-right font-medium text-rose-300">TK {Number(entry.amount).toLocaleString()}</td>
+                          <td className="px-3 py-3 text-center font-medium text-rose-300">TK {Number(entry.amount).toLocaleString()}</td>
                           <td className="px-3 py-3">
                             <div className="flex justify-end gap-2">
                               <button
@@ -245,6 +273,13 @@ function CashManagementPageContent() {
                                 title="Edit cost"
                               >
                                 <Pencil className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={() => setDeleteEntry({ ...entry, type: "cost" })}
+                                className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-2 text-rose-300 transition hover:bg-rose-500/20"
+                                title="Delete cost"
+                              >
+                                <Trash2 className="h-4 w-4" />
                               </button>
                             </div>
                           </td>
@@ -367,6 +402,33 @@ function CashManagementPageContent() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {deleteEntry && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4 backdrop-blur">
+          <div className="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900 p-6 shadow-soft">
+            <h3 className="text-xl font-semibold">
+              Delete this {deleteEntry.type === "cash" ? "cash" : "cost"}?
+            </h3>
+            <p className="mt-2 text-sm text-slate-400">
+              This action cannot be undone.
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setDeleteEntry(null)}
+                className="rounded-2xl border border-white/10 px-4 py-2.5 text-sm text-slate-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteEntry}
+                className="rounded-2xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-rose-500"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       )}
