@@ -144,8 +144,8 @@ function CashManagementPageContent() {
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(34,197,94,0.12),_transparent_30%),linear-gradient(135deg,#020617_0%,#0f172a_100%)] px-4 py-6 text-slate-100 sm:px-6 lg:px-8">
-      <div className="mx-auto flex max-w-7xl flex-col gap-6">
-        <header className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-slate-900/70 p-4 shadow-soft backdrop-blur xl:flex-row xl:items-center xl:justify-between xl:p-6">
+      <div className="mx-auto flex w-full max-w-7xl min-w-0 flex-col gap-6">
+        <header className="flex w-full flex-col gap-4 rounded-3xl border border-white/10 bg-slate-900/70 p-4 shadow-soft backdrop-blur xl:flex-row xl:items-center xl:justify-between xl:p-6">
           <div>
             <Link href="/home" className="mb-3 inline-flex items-center gap-2 text-sm text-slate-400 transition hover:text-white">
               <ArrowLeft className="h-4 w-4" /> Back to records
@@ -161,7 +161,7 @@ function CashManagementPageContent() {
           </div>
         </header>
 
-        <section className="rounded-3xl border border-white/10 bg-slate-900/70 p-4 shadow-soft backdrop-blur xl:p-6">
+        <section className="w-full min-w-0 rounded-3xl border border-white/10 bg-slate-900/70 p-4 shadow-soft backdrop-blur xl:p-6">
           <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-xl font-semibold">Cash & Expense Overview</h2>
@@ -182,16 +182,16 @@ function CashManagementPageContent() {
             </div>
           </div>
 
-          <div className="grid gap-4 xl:grid-cols-2">
-            <div className="rounded-2xl border border-emerald-500/20 bg-slate-950/40 p-4">
+          <div className="grid w-full min-w-0 gap-4 xl:grid-cols-2">
+            <div className="w-full min-w-0 rounded-2xl border border-emerald-500/20 bg-slate-950/40 p-4">
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-emerald-300">Cash</h3>
                 <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-sm font-medium text-emerald-200">
                   Total: TK {totalAddCash.toLocaleString()}
                 </span>
               </div>
-              <div className="max-h-72 overflow-y-auto rounded-2xl border border-white/10">
-                <table className="min-w-full divide-y divide-white/10 text-sm">
+              <div className="max-h-72 w-full overflow-x-auto overflow-y-auto rounded-2xl border border-white/10">
+                <table className="min-w-[360px] w-full divide-y divide-white/10 text-sm">
                   <thead className="sticky top-0 z-10 bg-slate-900/95 text-slate-400 backdrop-blur">
                     <tr>
                       <th className="px-3 py-3 text-left font-medium">Date</th>
@@ -237,15 +237,15 @@ function CashManagementPageContent() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-rose-500/20 bg-slate-950/40 p-4">
+            <div className="w-full min-w-0 rounded-2xl border border-rose-500/20 bg-slate-950/40 p-4">
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-rose-300">Cost</h3>
                 <span className="rounded-full border border-rose-500/30 bg-rose-500/10 px-2.5 py-1 text-sm font-medium text-rose-200">
                   Total: TK {totalCost.toLocaleString()}
                 </span>
               </div>
-              <div className="max-h-72 overflow-y-auto rounded-2xl border border-white/10">
-                <table className="min-w-full divide-y divide-white/10 text-sm">
+              <div className="max-h-72 w-full overflow-x-auto overflow-y-auto rounded-2xl border border-white/10">
+                <table className="min-w-[360px] w-full divide-y divide-white/10 text-sm">
                   <thead className="sticky top-0 z-10 bg-slate-900/95 text-slate-400 backdrop-blur">
                     <tr>
                       <th className="px-3 py-3 text-left font-medium">Date</th>
