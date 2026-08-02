@@ -260,8 +260,7 @@ function CashManagementPageContent() {
           <div className="mt-6 rounded-2xl border border-white/10 bg-slate-950/40 p-5">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
-                <p className="text-sm text-slate-400">Revenue Calculation</p>
-                <h3 className="mt-1 text-2xl font-semibold text-white">Revenue left after calculation</h3>
+                <h3 className="mt-1 text-2xl font-semibold text-white">Revenue Calculation</h3>
               </div>
               <div className="rounded-2xl border border-brand-500/20 bg-brand-500/10 px-3 py-2 text-brand-300">
                 Formula: (Overall Revenue + Total Add Cash) - Total Cost
