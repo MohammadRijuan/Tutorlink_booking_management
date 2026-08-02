@@ -42,7 +42,39 @@ function DashboardPageContent() {
     const pendingFees = records.filter((r) => r.feeStatus === 'Pending').reduce((acc, r) => acc + Number(r.agencyFee || 0), 0);
     const salaryTotal = records.reduce((acc, r) => acc + Number(r.salary || 0), 0);
 
-    return { total: records.length, booked, pending, cancelled, revenue, cancelledFee, pendingFees, salaryTotal };
+    const now = new Date();
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+
+    const currentMonthRevenue = records
+      .filter((r) => r.feeStatus === 'Done')
+      .filter((r) => {
+        const createdAt = r.createdAt ? new Date(r.createdAt) : null;
+        return createdAt && createdAt >= currentMonthStart && createdAt <= now;
+      })
+      .reduce((acc, r) => acc + Number(r.agencyFee || 0), 0);
+
+    const previousMonthRevenue = records
+      .filter((r) => r.feeStatus === 'Done')
+      .filter((r) => {
+        const createdAt = r.createdAt ? new Date(r.createdAt) : null;
+        return createdAt && createdAt >= previousMonthStart && createdAt <= previousMonthEnd;
+      })
+      .reduce((acc, r) => acc + Number(r.agencyFee || 0), 0);
+
+    return {
+      total: records.length,
+      booked,
+      pending,
+      cancelled,
+      revenue,
+      cancelledFee,
+      pendingFees,
+      salaryTotal,
+      currentMonthRevenue,
+      previousMonthRevenue,
+    };
   }, [records]);
 
   const chartData = useMemo(() => {
@@ -102,26 +134,40 @@ function DashboardPageContent() {
           ))}
         </section>
 
-        <section className="grid gap-4 lg:grid-cols-3">
-          <div className="rounded-3xl border border-white/10 bg-slate-900/70 p-5 shadow-soft backdrop-blur">
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+          <div className="flex flex-col justify-between rounded-3xl border border-white/10 bg-slate-900/70 p-5 shadow-soft backdrop-blur">
             <div className="flex items-center gap-2 text-sky-300">
-              <CircleDollarSign className="h-5 w-5" /> Revenue (Fee Done)
+              <CircleDollarSign className="h-5 w-5" /> Current Month Revenue
+            </div>
+            <p className="mt-4 text-3xl font-semibold text-white">TK {stats.currentMonthRevenue.toLocaleString()}</p>
+          </div>
+          <div className="flex flex-col justify-between rounded-3xl border border-white/10 bg-slate-900/70 p-5 shadow-soft backdrop-blur">
+            <div className="flex items-center gap-2 text-violet-300">
+              <TrendingUp className="h-5 w-5" /> Previous Month Revenue
+            </div>
+            <p className="mt-4 text-3xl font-semibold text-white">TK {stats.previousMonthRevenue.toLocaleString()}</p>
+          </div>
+          <div className="flex flex-col justify-between rounded-3xl border border-white/10 bg-slate-900/70 p-5 shadow-soft backdrop-blur">
+            <div className="flex items-center gap-2 text-sky-300">
+              <CircleDollarSign className="h-5 w-5" />Overall Revenue
             </div>
             <p className="mt-4 text-3xl font-semibold text-white">TK {stats.revenue.toLocaleString()}</p>
           </div>
-          <div className="rounded-3xl border border-white/10 bg-slate-900/70 p-5 shadow-soft backdrop-blur">
-            <div className="flex items-center gap-2 text-rose-300">
-              <CircleOff className="h-5 w-5" /> Cancelled Fee
-            </div>
-            <p className="mt-4 text-3xl font-semibold text-white">TK {stats.cancelledFee.toLocaleString()}</p>
-          </div>
-          <div className="rounded-3xl border border-white/10 bg-slate-900/70 p-5 shadow-soft backdrop-blur">
+          <div className="flex flex-col justify-between rounded-3xl border border-white/10 bg-slate-900/70 p-5 shadow-soft backdrop-blur">
             <div className="flex items-center gap-2 text-amber-300">
               <BadgeCheck className="h-5 w-5" /> Total Tuition Salary
             </div>
             <p className="mt-4 text-3xl font-semibold text-white">TK {stats.salaryTotal.toLocaleString()}</p>
           </div>
+
+          <div className="flex flex-col justify-between rounded-3xl border border-white/10 bg-slate-900/70 p-5 shadow-soft backdrop-blur">
+            <div className="flex items-center gap-2 text-rose-300">
+              <CircleOff className="h-5 w-5" /> Cancelled Fee
+            </div>
+            <p className="mt-4 text-3xl font-semibold text-white">TK {stats.cancelledFee.toLocaleString()}</p>
+          </div>
         </section>
+
 
         <section className="rounded-3xl border border-white/10 bg-slate-900/70 p-5 shadow-soft backdrop-blur">
           <div className="mb-5 flex flex-col gap-5 lg:gap-3 lg:flex-row lg:items-center lg:justify-between text-slate-200">

@@ -34,6 +34,11 @@ function HomePageContent() {
   const [showModal, setShowModal] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
+  const [cashEntries, setCashEntries] = useState([]);
+  const [costEntries, setCostEntries] = useState([]);
+  const [entryModalType, setEntryModalType] = useState(null);
+  const [editingEntry, setEditingEntry] = useState(null);
+  const [entryForm, setEntryForm] = useState({ title: "", amount: "" });
   const [form, setForm] = useState({
     tuitionCode: "",
     tutorName: "",
@@ -59,8 +64,21 @@ function HomePageContent() {
     }
   };
 
+  const fetchCashFlow = async () => {
+    try {
+      const res = await fetch("/api/cash-flow");
+      const data = await res.json();
+      const entries = data.entries || [];
+      setCashEntries(entries.filter((entry) => entry.type === "cash"));
+      setCostEntries(entries.filter((entry) => entry.type === "cost"));
+    } catch (error) {
+      toast.error("Failed to load cash flow data");
+    }
+  };
+
   useEffect(() => {
     fetchRecords();
+    fetchCashFlow();
   }, []);
 
   const filteredRecords = useMemo(() => {
@@ -93,6 +111,34 @@ function HomePageContent() {
         return String(a.tuitionCode).localeCompare(String(b.tuitionCode));
       });
   }, [records, search, feeFilter]);
+
+  const overallRevenue = useMemo(
+    () =>
+      records
+        .filter((record) => record.feeStatus === "Done")
+        .reduce((total, record) => total + Number(record.agencyFee || 0), 0),
+    [records],
+  );
+
+  const totalAddCash = useMemo(
+    () =>
+      cashEntries.reduce(
+        (total, entry) => total + Number(entry.amount || 0),
+        0,
+      ),
+    [cashEntries],
+  );
+
+  const totalCost = useMemo(
+    () =>
+      costEntries.reduce(
+        (total, entry) => total + Number(entry.amount || 0),
+        0,
+      ),
+    [costEntries],
+  );
+
+  const revenueLeft = overallRevenue + totalAddCash - totalCost;
 
   const resetForm = () => {
     setForm({
@@ -130,6 +176,58 @@ function HomePageContent() {
       bookingStatus: record.bookingStatus,
     });
     setShowModal(true);
+  };
+
+  const openEntryModal = (type, entry = null) => {
+    setEntryModalType(type);
+    setEditingEntry(entry);
+    setEntryForm({
+      title: entry?.title || "",
+      amount: entry?.amount || "",
+    });
+  };
+
+  const handleEntrySubmit = async (e) => {
+    e.preventDefault();
+
+    const trimmedTitle = entryForm.title.trim();
+    const parsedAmount = Number(entryForm.amount);
+
+    if (!trimmedTitle || Number.isNaN(parsedAmount) || parsedAmount <= 0) {
+      toast.error("Please enter a valid title and amount.");
+      return;
+    }
+
+    try {
+      const payload = {
+        id: editingEntry?._id || editingEntry?.id,
+        title: trimmedTitle,
+        amount: parsedAmount,
+        type: entryModalType,
+      };
+
+      const method = editingEntry ? "PATCH" : "POST";
+      const res = await fetch("/api/cash-flow", {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed");
+
+      await fetchCashFlow();
+      toast.success(
+        editingEntry
+          ? `${entryModalType === "cash" ? "Cash" : "Cost"} entry updated successfully`
+          : `${entryModalType === "cash" ? "Cash" : "Cost"} entry saved successfully`,
+      );
+      setEntryForm({ title: "", amount: "" });
+      setEditingEntry(null);
+      setEntryModalType(null);
+    } catch (error) {
+      toast.error(error.message || "Something Went Wrong");
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -205,6 +303,12 @@ function HomePageContent() {
             >
               <LayoutDashboard className="h-4 w-4" /> Dashboard
             </Link>
+            <Link
+              href="/cash_management"
+              className="flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-slate-800/70 px-4 py-2.5 font-medium text-slate-200 transition hover:border-brand-500/40 hover:text-white"
+            >
+             Cash Management
+            </Link>
             <button
               onClick={openAddModal}
               className="flex items-center justify-center gap-2 rounded-2xl bg-brand-600 px-4 py-2.5 font-semibold text-white transition hover:bg-brand-500"
@@ -215,7 +319,7 @@ function HomePageContent() {
         </header>
 
         <section className="rounded-3xl border border-white/10 bg-slate-900/70 p-4 shadow-soft backdrop-blur xl:p-6">
-          <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-xl font-semibold">Tuition Records</h2>
               <p className="text-sm text-slate-400">
@@ -366,6 +470,7 @@ function HomePageContent() {
             </div>
           )}
         </section>
+
       </div>
 
       {showModal && (
@@ -505,6 +610,95 @@ function HomePageContent() {
                 </div>
               </form>
             </div>
+          </div>
+        </div>
+      )}
+
+      {entryModalType && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4 backdrop-blur">
+          <div className="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900 p-6 shadow-soft">
+            <div className="mb-5 flex items-center justify-between gap-3">
+              <div>
+                <h3 className="text-xl font-semibold">
+                  {editingEntry
+                    ? `Edit ${entryModalType === "cash" ? "Cash" : "Cost"}`
+                    : entryModalType === "cash"
+                      ? "Add Cash"
+                      : "Add Cost"}
+                </h3>
+                <p className="text-sm text-slate-400">
+                  {editingEntry
+                    ? "Update the selected entry."
+                    : entryModalType === "cash"
+                      ? "Add a new cash entry."
+                      : "Add a new cost entry."}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setEntryModalType(null);
+                  setEditingEntry(null);
+                }}
+                className="rounded-xl border border-white/10 px-3 py-2 text-sm text-slate-300"
+              >
+                Close
+              </button>
+            </div>
+
+            <form onSubmit={handleEntrySubmit} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-300">
+                  Title
+                </label>
+                <input
+                  type="text"
+                  value={entryForm.title}
+                  onChange={(e) =>
+                    setEntryForm({ ...entryForm, title: e.target.value })
+                  }
+                  placeholder="e.g. Tuition Collection"
+                  className="w-full rounded-2xl border border-white/10 bg-slate-800/70 px-3 py-2.5 text-sm outline-none focus:border-brand-500"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-300">
+                  Amount
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={entryForm.amount}
+                  onChange={(e) =>
+                    setEntryForm({ ...entryForm, amount: e.target.value })
+                  }
+                  placeholder="0"
+                  className="w-full rounded-2xl border border-white/10 bg-slate-800/70 px-3 py-2.5 text-sm outline-none focus:border-brand-500"
+                  required
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEntryModalType(null);
+                    setEditingEntry(null);
+                  }}
+                  className="rounded-2xl border border-white/10 px-4 py-2.5 text-sm text-slate-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-2xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-500"
+                >
+                  {editingEntry ? "Update" : "Save"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
