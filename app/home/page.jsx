@@ -304,10 +304,16 @@ function HomePageContent() {
               <LayoutDashboard className="h-4 w-4" /> Dashboard
             </Link>
             <Link
+              href="/teacher_panel"
+              className="flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-slate-800/70 px-4 py-2.5 font-medium text-slate-200 transition hover:border-brand-500/40 hover:text-white"
+            >
+              Teacher Panel
+            </Link>
+            <Link
               href="/cash_management"
               className="flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-slate-800/70 px-4 py-2.5 font-medium text-slate-200 transition hover:border-brand-500/40 hover:text-white"
             >
-             Cash Management
+              Cash Management
             </Link>
             <button
               onClick={openAddModal}
